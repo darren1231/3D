@@ -15,11 +15,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	Mat img4 = imread("0um/img1-4.bmp", 2);
 	Mat img5 = imread("0um/img1-5.bmp", 2);*/
 
+	string filename;
+	Mat source_array[5];
+	for (int index = 0; index < 5; index++){
+		filename = "img2-" + to_string(index+1) + ".bmp";
+		source_array[index] = imread(filename,2);
+	}
+
 	vector <Mat> source_mat = {};
 	vector <Mat> binary_mat = {};
-	Mat img;
-	Mat binary_img;
-	string filename;
+	/*Mat img;
+	Mat binary_img;	
 	for (int index = 1; index <= 5; index++){
 		filename = "img2-" + to_string(index) + ".bmp";
 		img = imread(filename);
@@ -28,7 +34,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	for (int index = 0; index < 5; index++){
 		binary_img = source_mat[index].clone();
 		binary_mat.push_back(binary_img);
-	}
+	}*/
 
 	Mat img1 = imread("img2-1.bmp", 2);
 	Mat img2 = imread("img2-2.bmp", 2);
@@ -48,19 +54,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	double threshod;
 	double set_thresshold = 0.65;
 
-	for (int x = 0; x < source_mat[0].cols; x++){
-		for (int y = 0; y < source_mat[0].rows; y++){
+	for (int x = 0; x < source_array[0].cols; x++){
+		for (int y = 0; y < 100; y++){
 
 			vector<int> v = {};
-			/*for (int index = 0; index < 5; index++){
-				v.push_back((int)(source_mat[index].at<uchar>(y, x)));
+			for (int index = 0; index < 5; index++){
+				gray = (int)(source_array[index].at<uchar>(y, x));
+				v.push_back(gray);
+				/*v.push_back((int)(source_mat[index].at<uchar>(y, x)));*/
 
-			}*/
-			v.push_back((int)img1.at<uchar>(y, x));
+			}
+			/*v.push_back((int)img1.at<uchar>(y, x));
 			v.push_back((int)img2.at<uchar>(y, x));
 			v.push_back((int)img3.at<uchar>(y, x));
 			v.push_back((int)img4.at<uchar>(y, x));
-			v.push_back((int)img5.at<uchar>(y, x));
+			v.push_back((int)img5.at<uchar>(y, x));*/
 
 			maxValue = *max_element(v.begin(), v.end());
 			minValue = *min_element(v.begin(), v.end());
@@ -152,12 +160,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	//resize(img1, img1, Size(img1.cols*scale, img1.rows*scale));*/
 	//
 
-	//namedWindow("HelloCV", WINDOW_AUTOSIZE);
-	//imshow("HelloCV", img1);
-	//imshow("binary1", binary1);
+	namedWindow("HelloCV", WINDOW_AUTOSIZE);
+	imshow("HelloCV", img1);
+	imshow("binary0", binary0);
 	//
-	//waitKey(0);
-	//destroyWindow("HelloCV");
+	waitKey(0);
+	destroyWindow("HelloCV");
 	return 0;
 
 }
