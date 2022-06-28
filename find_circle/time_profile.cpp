@@ -45,6 +45,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			minValue = *min_element(v.begin(), v.end());
 
 			vector<int> pattern = {};
+			vector<int> front_four = {};
+			vector<int> last_four = {};
 			for (int index = 0; index < 5; index++){
 				if (maxValue - minValue != 0)
 					threshod = (double)(v[index] - minValue) / (maxValue - minValue);
@@ -62,12 +64,19 @@ int _tmain(int argc, _TCHAR* argv[])
 					
 			}	
 
-			pattern.pop_back();
-			bool result = if_fit_pattern(pattern);
-			if (result == false)
-				noise_map.at<uchar>(y, x) = 255;
-			else
+			front_four.assign(pattern.begin(), pattern.end());
+			front_four.pop_back();
+
+			last_four.assign(pattern.begin(), pattern.end());
+			last_four.erase(last_four.begin());
+			
+			bool result_front = if_fit_pattern(front_four);
+			bool result_last = if_fit_pattern(last_four);
+
+			if (result_front && result_last)
 				noise_map.at<uchar>(y, x) = 0;
+			else
+				noise_map.at<uchar>(y, x) = 255;
 
 			/*if (threshod!=0)
 				cout << x << " " << y <<" "<<threshod<< endl;*/
