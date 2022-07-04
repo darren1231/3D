@@ -8,6 +8,8 @@ using namespace std;
 
 string formatDobleValue(double val, int fixed);
 bool if_fit_pattern(vector<int> pattern);
+void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma);
+void GetBinaryMap(Mat src_map[5], float set_thresshold);
 int _tmain(int argc, _TCHAR* argv[])
 {
 	
@@ -16,23 +18,31 @@ int _tmain(int argc, _TCHAR* argv[])
 	Mat source_map[5];
 	Mat binary_map[5];
 	for (int index = 0; index < 5; index++){
-		filename = "img2-" + to_string(index+1) + ".bmp";
+		filename = "0um/img1-" + to_string(index + 1) + ".bmp";
+		//filename = "img2-" + to_string(index+1) + ".bmp";
 		source_map[index] = imread(filename, 2);
 		binary_map[index] = source_map[index].clone();
 	}	
+
+	//imshow("source_map", source_map[0]);
+
+	/*Mat gamma_img_map[5];
+	float fGamma = 1 / 2.0;
+	for (int index = 0; index < 5; index++)
+		GetGammaCorrection(source_map[index], gamma_img_map[index], fGamma);*/
+	//imshow("after_gamma_correction", gamma_img_map[0]);
 
 	int minValue;
 	int maxValue;
 	int gray;
 	double threshod;
-	double set_thresshold = 0.65;
+	double set_thresshold = 0.6;
 	bool binary_pattern[4];
 	
 	Mat noise_map = Mat(source_map[3].size(), source_map[3].type());
-	//Mat noise_map = Mat(source_map[0].rows, source_map[0].cols, CV_32FC1);
 
 	for (int x = 0; x < source_map[0].cols; x++){
-		for (int y = 0; y < 100; y++){
+		for (int y = 0; y < 10; y++){
 
 			vector<int> v = {};
 			for (int index = 0; index < 5; index++){
@@ -85,21 +95,21 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 	for (int index = 0; index < 5; index++)
-		imwrite("binary_ntu_" + to_string(index) + ".jpg", binary_map[index]);
+		imwrite("binary_plane_th0.6_" + to_string(index) + ".jpg", binary_map[index]);
 	
 	
 	
-	imwrite("noise_map_test.jpg", noise_map);
+	imwrite("noise_map_plane_th0.6.jpg", noise_map);
 
-	///*double scale = 0.25;
-	//resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
-	//resize(img1, img1, Size(img1.cols*scale, img1.rows*scale));*/
-	//
+	/*double scale = 0.25;
+	resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
+	resize(img1, img1, Size(img1.cols*scale, img1.rows*scale));*/
+	
 
 	namedWindow("HelloCV", WINDOW_AUTOSIZE);
 	imshow("HelloCV", source_map[0]);
 	imshow("binary0", binary_map[0]);
-	imshow("noise_map", noise_map);
+	//imshow("noise_map", noise_map);
 	//
 	waitKey(0);
 	destroyWindow("HelloCV");
@@ -128,4 +138,36 @@ bool if_fit_pattern(vector<int> pattern) {
 	
 	
 	return fit_pattern;
+}
+
+void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma)
+{
+	unsigned char bin[256];
+	for (int i = 0; i < 256; ++i)
+	{
+		bin[i] = saturate_cast<uchar>(pow((float)(i / 255.0), fGamma) * 255.0f);
+	}
+	dst = src.clone();
+	const int channels = dst.channels();
+	switch (channels)
+	{
+	case 1:
+	{
+			  MatIterator_<uchar> it, end;
+			  for (it = dst.begin<uchar>(), end = dst.end<uchar>(); it != end; it++)
+				  *it = bin[(*it)];
+			  break;
+	}
+	case 3:
+	{
+			  MatIterator_<Vec3b> it, end;
+			  for (it = dst.begin<Vec3b>(), end = dst.end<Vec3b>(); it != end; it++)
+			  {
+				  (*it)[0] = bin[((*it)[0])];
+				  (*it)[1] = bin[((*it)[1])];
+				  (*it)[2] = bin[((*it)[2])];
+			  }
+			  break;
+	}
+	}
 }
