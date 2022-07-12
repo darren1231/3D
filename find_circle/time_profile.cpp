@@ -1,8 +1,8 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <opencv2/opencv.hpp>  
 #include<algorithm>
 #include <vector>
-
+#include "tqdm.h"
 using namespace cv;
 using namespace std;
 
@@ -10,12 +10,18 @@ string formatDobleValue(double val, int fixed);
 bool if_fit_pattern(vector<int> pattern);
 void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma);
 void GetBinaryMap(Mat src_map[5], float set_thresshold);
+
+//set mouse event
+static void onMouse(int event, int x, int y, int, void* userInput);
+
+Mat source_map[5];
+static int maze[2456][2054][5] = { -1 };
 int _tmain(int argc, _TCHAR* argv[])
 {
 	
 
 	string filename;
-	Mat source_map[5];
+	
 	Mat binary_map[5];
 	for (int index = 0; index < 5; index++){
 		filename = "0um/img1-" + to_string(index + 1) + ".bmp";
@@ -36,9 +42,13 @@ int _tmain(int argc, _TCHAR* argv[])
 	int maxValue;
 	int gray;
 	double threshod;
-	double set_thresshold = 0.6;
+	double set_thresshold = 0.47;
 	bool binary_pattern[4];
+	const int cols = source_map[0].cols;
+	const int rows = source_map[0].rows;
 	
+	
+
 	Mat noise_map = Mat(source_map[3].size(), source_map[3].type());
 
 	for (int x = 0; x < source_map[0].cols; x++){
@@ -66,10 +76,12 @@ int _tmain(int argc, _TCHAR* argv[])
 				if (threshod < set_thresshold){
 					binary_map[index].at<uchar>(y, x) = 0;
 					pattern.push_back(0);
+					maze[y][x][index] = 0;
 				}					
 				else{
 					binary_map[index].at<uchar>(y, x) = 255;
 					pattern.push_back(1);
+					maze[y][x][index] = 1;
 				}
 					
 			}	
@@ -95,19 +107,22 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 	for (int index = 0; index < 5; index++)
-		imwrite("binary_plane_th0.6_" + to_string(index) + ".jpg", binary_map[index]);
+		imwrite("test_binary_plane_th0.47_" + to_string(index) + ".jpg", binary_map[index]);
 	
 	
 	
-	imwrite("noise_map_plane_th0.6.jpg", noise_map);
+	imwrite("test_noise_map_plane_th0.47.jpg", noise_map);
 
 	/*double scale = 0.25;
 	resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
 	resize(img1, img1, Size(img1.cols*scale, img1.rows*scale));*/
 	
 
-	namedWindow("HelloCV", WINDOW_AUTOSIZE);
-	imshow("HelloCV", source_map[0]);
+	namedWindow("HelloCV");
+
+	setMouseCallback("HelloCV", onMouse, &source_map[0]);
+
+	
 	imshow("binary0", binary_map[0]);
 	//imshow("noise_map", noise_map);
 	//
@@ -170,4 +185,28 @@ void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma)
 			  break;
 	}
 	}
+}
+
+static void onMouse(int event, int x, int y, int, void* userInput)
+{
+	//只响应 鼠标左键按下事件;
+	if (event != EVENT_LBUTTONDOWN) return;
+
+	Mat* img = (Mat*)userInput;
+
+	Point Pre_pt = Point(x+20, y);
+	Point pattern_pt = Point(x + 20, y+20);
+	char Txt_Point[80];
+	char pattern[80];
+
+	sprintf_s(Txt_Point, "(%d,%d)", x, y);
+	sprintf_s(pattern, "(%d,%d)", maze[x][y][0], maze[x][y][1]);
+	putText(source_map[0], Txt_Point, Pre_pt,
+		CV_FONT_HERSHEY_COMPLEX, 0.5, Scalar(0, 0, 0, 255), 1, 8);
+	putText(source_map[0], pattern, pattern_pt,
+		CV_FONT_HERSHEY_COMPLEX, 0.5, Scalar(0, 0, 0, 255), 1, 8);
+	//在点击坐标 绘制圆形;
+	circle(source_map[0], Point(x, y), 10, Scalar(0, 255, 0), 10);
+
+	imshow("HelloCV", source_map[0]);
 }
