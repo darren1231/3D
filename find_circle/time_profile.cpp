@@ -10,19 +10,23 @@ using namespace std;
 
 string formatDobleValue(double val, int fixed);
 bool if_fit_pattern(vector<int> pattern);
+void if_fit_certain_pattern(vector<int> pattern,int x,int y);
 void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma);
 void GetBinaryMap(Mat src_map[5], float set_thresshold);
 
 //set mouse event
 static void onMouse(int event, int x, int y, int, void* userInput);
 
+int width = 4096;
+int height = 3000;
 Mat source_map[5];
 static int maze[4096][3000][5] = { -1 };
 Mat noise_map;
+Mat color_pattern = Mat(3000, 4096, CV_8UC3);
 int _tmain(int argc, _TCHAR* argv[])
 {
 	ofstream myfile;
-	myfile.open("pattern noise_or.txt");
+	myfile.open("test.txt");
 
 	string filename;
 	
@@ -52,7 +56,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	const int rows = source_map[0].rows;
 	
 	
-
+	
 	noise_map = Mat(source_map[3].size(), source_map[3].type());
 
 	for (int y = 0; y < 100; y++){
@@ -103,6 +107,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			bool result_front = if_fit_pattern(front_four);
 			bool result_last = if_fit_pattern(last_four);
 
+			if_fit_certain_pattern(front_four,x,y);
 			/*if (result_front){
 				noise_map.at<uchar>(y, x) = 0;
 			}
@@ -126,7 +131,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	
 	
-	imwrite("or.jpg", noise_map);
+	imwrite("test.jpg", noise_map);
 
 	/*double scale = 0.25;
 	resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
@@ -137,7 +142,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	setMouseCallback("HelloCV", onMouse);
 
-	
+	namedWindow("color_pattern");
+	imshow("color_pattern", color_pattern);
 	//imshow("binary0", binary_map[0]);
 	//imshow("noise_map", noise_map);
 	//
@@ -150,6 +156,31 @@ int _tmain(int argc, _TCHAR* argv[])
 string formatDobleValue(double val, int fixed) {
 	auto str = std::to_string(val);
 	return str.substr(0, str.find(".") + fixed + 1);
+}
+
+
+
+void if_fit_certain_pattern(vector<int> pattern,int x, int y) {
+	vector<int> i_vec1 = { 1, 0, 1, 1 };
+	
+
+	bool fit_pattern = false;
+	if (pattern == i_vec1) {
+
+		try {
+			color_pattern.at<Vec3b>(y, x)[0] = 0;
+			color_pattern.at<Vec3b>(y, x)[1] = 0;
+			color_pattern.at<Vec3b>(y, x)[2] = 255;
+		}
+		catch (std::exception &e) {
+			cout << "exception: " << e.what() << "\n";
+		}
+
+
+		/*if (pattern == i_vec5) fit_pattern = true;*/
+	}
+
+	
 }
 
 bool if_fit_pattern(vector<int> pattern) {
