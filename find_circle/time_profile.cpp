@@ -115,7 +115,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				myfile << x << " " << y << " :" << maze[x][y][0] << maze[x][y][1] << maze[x][y][2] << maze[x][y][3] << maze[x][y][4] << endl;
 				noise_map.at<uchar>(y, x) = 255;
 			}*/
-			if (result_front || result_last)
+			if (result_front)
 				noise_map.at<uchar>(y, x) = 0;
 			else
 				noise_map.at<uchar>(y, x) = 255;
@@ -144,6 +144,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	namedWindow("color_pattern");
 	imshow("color_pattern", color_pattern);
+	imwrite("color_pattern.jpg", color_pattern);
 	//imshow("binary0", binary_map[0]);
 	//imshow("noise_map", noise_map);
 	//
@@ -161,25 +162,51 @@ string formatDobleValue(double val, int fixed) {
 
 
 void if_fit_certain_pattern(vector<int> pattern,int x, int y) {
-	vector<int> i_vec1 = { 1, 0, 1, 1 };
-	
+	vector<int> i_vec1 = { 0, 1, 1, 0 };
+	vector<int> i_vec2 = { 0, 0, 1, 1 };
+	vector<int> i_vec3 = { 1, 0, 0, 1 };
+	vector<int> i_vec4 = { 1, 1, 0, 0 };
 
 	bool fit_pattern = false;
 	if (pattern == i_vec1) {
 
-		try {
+		color_pattern.at<Vec3b>(y, x)[0] = 255;
+		color_pattern.at<Vec3b>(y, x)[1] = 0;
+		color_pattern.at<Vec3b>(y, x)[2] = 0;
+
+		/*try {
 			color_pattern.at<Vec3b>(y, x)[0] = 0;
 			color_pattern.at<Vec3b>(y, x)[1] = 0;
 			color_pattern.at<Vec3b>(y, x)[2] = 255;
 		}
 		catch (std::exception &e) {
 			cout << "exception: " << e.what() << "\n";
-		}
+		}*/
 
 
 		/*if (pattern == i_vec5) fit_pattern = true;*/
 	}
+	if (pattern == i_vec2) {
 
+		color_pattern.at<Vec3b>(y, x)[0] = 0;
+		color_pattern.at<Vec3b>(y, x)[1] = 255;
+		color_pattern.at<Vec3b>(y, x)[2] = 0;
+
+	}
+	if (pattern == i_vec3) {
+
+		color_pattern.at<Vec3b>(y, x)[0] = 0;
+		color_pattern.at<Vec3b>(y, x)[1] = 0;
+		color_pattern.at<Vec3b>(y, x)[2] = 255;
+
+	}
+	if (pattern == i_vec4) {
+
+		color_pattern.at<Vec3b>(y, x)[0] = 255;
+		color_pattern.at<Vec3b>(y, x)[1] = 255;
+		color_pattern.at<Vec3b>(y, x)[2] = 0;
+
+	}
 	
 }
 
