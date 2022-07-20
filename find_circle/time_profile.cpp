@@ -11,18 +11,24 @@ using namespace std;
 string formatDobleValue(double val, int fixed);
 bool if_fit_pattern(vector<int> pattern);
 void if_fit_certain_pattern(vector<int> pattern,int x,int y);
+bool if_fit_b2w_noise(vector<int> pattern);
 void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma);
 void GetBinaryMap(Mat src_map[5], float set_thresshold);
 
 //set mouse event
 static void onMouse(int event, int x, int y, int, void* userInput);
 
-int width = 4096;
-int height = 3000;
+int width = 2456;
+int height = 2054;
 Mat source_map[5];
-static int maze[4096][3000][5] = { -1 };
+static int maze[2456][2054][5] = { -1 };
+
+//int width = 4096;
+//int height = 3000;
+//Mat source_map[5];
+//static int maze[4096][3000][5] = { -1 };
 Mat noise_map;
-Mat color_pattern = Mat(3000, 4096, CV_8UC3);
+Mat color_pattern = Mat(height, width, CV_8UC3);
 int _tmain(int argc, _TCHAR* argv[])
 {
 	ofstream myfile;
@@ -32,8 +38,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	Mat binary_map[5];
 	for (int index = 0; index < 5; index++){
-		filename = "0um/img1-" + to_string(index + 1) + ".bmp";
-		//filename = "img2-" + to_string(index+1) + ".bmp";
+		//filename = "0um/img1-" + to_string(index + 1) + ".bmp";
+		filename = "img2-" + to_string(index+1) + ".bmp";
 		source_map[index] = imread(filename, 2);
 		binary_map[index] = source_map[index].clone();
 	}	
@@ -50,7 +56,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	int maxValue;
 	int gray;
 	double threshod;
-	double set_thresshold = 0.5;
+
+	double set_thresshold = 0.65;
+	//plane
+	//double set_thresshold = 0.5;
 	bool binary_pattern[4];
 	const int cols = source_map[0].cols;
 	const int rows = source_map[0].rows;
@@ -59,7 +68,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	
 	noise_map = Mat(source_map[3].size(), source_map[3].type());
 
-	for (int y = 0; y < 100; y++){
+	//for (int y = 0; y < 100; y++){
+	for (int y = 0; y < source_map[0].rows; y++){
 		for (int x = 0; x < source_map[0].cols; x++){
 
 	/*for (int x = 0; x < source_map[0].cols; x++){
@@ -104,8 +114,9 @@ int _tmain(int argc, _TCHAR* argv[])
 			last_four.assign(pattern.begin(), pattern.end());
 			last_four.erase(last_four.begin());
 			
-			bool result_front = if_fit_pattern(front_four);
-			bool result_last = if_fit_pattern(last_four);
+			bool result_front = if_fit_b2w_noise(front_four);
+			/*bool result_front = if_fit_pattern(front_four);
+			bool result_last = if_fit_pattern(last_four);*/
 
 			if_fit_certain_pattern(front_four,x,y);
 			/*if (result_front){
@@ -116,9 +127,9 @@ int _tmain(int argc, _TCHAR* argv[])
 				noise_map.at<uchar>(y, x) = 255;
 			}*/
 			if (result_front)
-				noise_map.at<uchar>(y, x) = 0;
-			else
 				noise_map.at<uchar>(y, x) = 255;
+			else
+				noise_map.at<uchar>(y, x) = 0;
 
 			/*if (threshod!=0)
 				cout << x << " " << y <<" "<<threshod<< endl;*/
@@ -127,11 +138,25 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	myfile.close();
 	for (int index = 0; index < 5; index++)
-		imwrite("test_" + to_string(index) + ".jpg", binary_map[index]);
+		imwrite("20220718_b2w_" + to_string(index) + ".jpg", binary_map[index]);
 	
+	Mat binary_map_process[5];
+	Mat binary_map_diff[5];
 	
+	imwrite("20220718_b2w_noise.jpg", noise_map);
+	/*Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));*/
+
+	//erode(binary_map[0], binary_map_process[0], kernel);
+	/*dilate(binary_map_process[0], binary_map_process[0], kernel);*/
+
 	
-	imwrite("test.jpg", noise_map);
+	/*morphologyEx(binary_map[0], binary_map_process[0], CV_MOP_TOPHAT, kernel);*/
+
+	/*binary_map_diff[0] = binary_map[0] - binary_map_process[0];
+	imshow("binary0", binary_map[0]);
+	imshow("binary_map_process[0]", binary_map_process[0]);
+	imshow("binary_map_diff[0]", binary_map_diff[0]);*/
+
 
 	/*double scale = 0.25;
 	resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
@@ -145,7 +170,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	namedWindow("color_pattern");
 	imshow("color_pattern", color_pattern);
 	imwrite("color_pattern.jpg", color_pattern);
-	//imshow("binary0", binary_map[0]);
+	
 	//imshow("noise_map", noise_map);
 	//
 	waitKey(0);
@@ -193,7 +218,7 @@ void if_fit_certain_pattern(vector<int> pattern,int x, int y) {
 		color_pattern.at<Vec3b>(y, x)[2] = 0;
 
 	}
-	if (pattern == i_vec3) {
+	/*if (pattern == i_vec3) {
 
 		color_pattern.at<Vec3b>(y, x)[0] = 0;
 		color_pattern.at<Vec3b>(y, x)[1] = 0;
@@ -206,8 +231,27 @@ void if_fit_certain_pattern(vector<int> pattern,int x, int y) {
 		color_pattern.at<Vec3b>(y, x)[1] = 255;
 		color_pattern.at<Vec3b>(y, x)[2] = 0;
 
-	}
+	}*/
 	
+}
+
+bool if_fit_b2w_noise(vector<int> pattern) {
+	vector<int> i_vec1 = { 1, 1, 1, 0 };
+	vector<int> i_vec2 = { 0, 1, 1, 1 };
+	vector<int> i_vec3 = { 1, 1, 0, 1 };
+	vector<int> i_vec4 = { 1, 0, 1, 1 };
+	
+	
+
+	bool fit_pattern = false;
+	if (pattern == i_vec1) fit_pattern = true;
+	if (pattern == i_vec2) fit_pattern = true;
+	if (pattern == i_vec3) fit_pattern = true;
+	if (pattern == i_vec4) fit_pattern = true;
+	/*if (pattern == i_vec5) fit_pattern = true;*/
+
+
+	return fit_pattern;
 }
 
 bool if_fit_pattern(vector<int> pattern) {
