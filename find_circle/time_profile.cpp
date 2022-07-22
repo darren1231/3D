@@ -5,6 +5,7 @@
 #include "tqdm.h"
 #include<fstream>
 #include <iostream>
+#include <ctime>
 using namespace cv;
 using namespace std;
 
@@ -14,6 +15,8 @@ void if_fit_certain_pattern(vector<int> pattern,int x,int y);
 bool if_fit_b2w_noise(vector<int> pattern);
 void GetGammaCorrection(Mat& src, Mat& dst, const float fGamma);
 void GetBinaryMap(Mat src_map[5], float set_thresshold);
+Mat read_zmap(string loadPath);
+void remove_noise(Mat noise_map,String file_dir);
 
 //set mouse event
 static void onMouse(int event, int x, int y, int, void* userInput);
@@ -108,28 +111,28 @@ int _tmain(int argc, _TCHAR* argv[])
 					
 			}	
 
-			front_four.assign(pattern.begin(), pattern.end());
-			front_four.pop_back();
+			//front_four.assign(pattern.begin(), pattern.end());
+			//front_four.pop_back();
 
-			last_four.assign(pattern.begin(), pattern.end());
-			last_four.erase(last_four.begin());
-			
-			bool result_front = if_fit_b2w_noise(front_four);
-			/*bool result_front = if_fit_pattern(front_four);
-			bool result_last = if_fit_pattern(last_four);*/
+			//last_four.assign(pattern.begin(), pattern.end());
+			//last_four.erase(last_four.begin());
+			//
+			////bool result_front = if_fit_b2w_noise(front_four);
+			//bool result_front = if_fit_pattern(front_four);
+			//bool result_last = if_fit_pattern(last_four);
 
-			if_fit_certain_pattern(front_four,x,y);
-			/*if (result_front){
-				noise_map.at<uchar>(y, x) = 0;
-			}
-			else{
-				myfile << x << " " << y << " :" << maze[x][y][0] << maze[x][y][1] << maze[x][y][2] << maze[x][y][3] << maze[x][y][4] << endl;
-				noise_map.at<uchar>(y, x) = 255;
-			}*/
-			if (result_front)
+			///*if_fit_certain_pattern(front_four,x,y);*/
+			//if (result_front && result_last){
+			//	noise_map.at<uchar>(y, x) = 0;
+			//}
+			//else{
+			//	myfile << x << " " << y << " :" << maze[x][y][0] << maze[x][y][1] << maze[x][y][2] << maze[x][y][3] << maze[x][y][4] << endl;
+			//	noise_map.at<uchar>(y, x) = 255;
+			//}
+			/*if (result_front)
 				noise_map.at<uchar>(y, x) = 255;
 			else
-				noise_map.at<uchar>(y, x) = 0;
+				noise_map.at<uchar>(y, x) = 0;*/
 
 			/*if (threshod!=0)
 				cout << x << " " << y <<" "<<threshod<< endl;*/
@@ -138,25 +141,38 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	myfile.close();
 	for (int index = 0; index < 5; index++)
-		imwrite("20220718_b2w_" + to_string(index) + ".jpg", binary_map[index]);
+		imwrite("20220722_open_process/20220721_binary_" + to_string(index) + ".jpg", binary_map[index]);
+	
+	
+	//imwrite("20220721_not_fit_pattern_noise_first_and_last_4.jpg", noise_map);
+	
+	String file_dir = "20220722_open_process";
 	
 	Mat binary_map_process[5];
 	Mat binary_map_diff[5];
-	
-	imwrite("20220718_b2w_noise.jpg", noise_map);
-	/*Mat kernel = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));*/
-
-	//erode(binary_map[0], binary_map_process[0], kernel);
-	/*dilate(binary_map_process[0], binary_map_process[0], kernel);*/
-
+	Mat binary_map_diff_all;
 	
 	/*morphologyEx(binary_map[0], binary_map_process[0], CV_MOP_TOPHAT, kernel);*/
+	Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11), Point(-1, -1));
+	for (int index = 0; index < 5; index++){
+		/*erode(binary_map[index], binary_map_process[index], kernel);
+		dilate(binary_map_process[index], binary_map_process[index], kernel);*/
 
-	/*binary_map_diff[0] = binary_map[0] - binary_map_process[0];
+		morphologyEx(binary_map[index], binary_map_process[index], MORPH_OPEN, kernel);
+		binary_map_diff[index] = binary_map[index] - binary_map_process[index];		
+
+		imwrite(file_dir+"/20220722_erode_dilate_k11_process_" + to_string(index) + ".jpg", binary_map_process[index]);
+		imwrite(file_dir+"/20220722_erode_dilate_k11_diff_" + to_string(index) + ".jpg", binary_map_diff[index]);
+	}
+	binary_map_diff_all = binary_map_diff[0] + binary_map_diff[1] + binary_map_diff[2] + binary_map_diff[3] + binary_map_diff[4];
+	imwrite(file_dir+"/20220722_erode_dilate_k11_diff_all.jpg", binary_map_diff_all);
+
+	//remove noise according to map
+	remove_noise(binary_map_diff_all, file_dir);
+
 	imshow("binary0", binary_map[0]);
 	imshow("binary_map_process[0]", binary_map_process[0]);
-	imshow("binary_map_diff[0]", binary_map_diff[0]);*/
-
+	imshow("binary_map_diff[0]", binary_map_diff[0]);
 
 	/*double scale = 0.25;
 	resize(binary1, binary1, Size(img1.cols*scale, img1.rows*scale));WW
@@ -326,4 +342,55 @@ static void onMouse(int event, int x, int y, int, void* userInput)
 	circle(noise_map, Point(x, y), 10, Scalar(0, 255, 0), 10);
 
 	imshow("HelloCV", noise_map);
+}
+
+Mat read_zmap(string loadPath){
+
+	const clock_t begin_time = clock();
+	cv::FileStorage fs(loadPath, cv::FileStorage::READ);
+	Mat Z_map;
+	fs["X"] >> Z_map; // x contains gibberish
+	cout << "after reading xml took(s)..." << float(clock() - begin_time) / CLOCKS_PER_SEC << endl;
+
+	return Z_map;
+}
+void remove_noise(Mat noise_map,String file_dir){
+	Mat Z_map = read_zmap("source/cloud/Z_map.xml");
+	ofstream point_cloud_after_rmnoise;
+	point_cloud_after_rmnoise.open(file_dir+"/20220722_after_rmnoise.xyz");
+	ofstream only_noise;
+	only_noise.open(file_dir+"/20220722_only_noise.txt");
+
+	int sum = 0;
+	int sum_of_right = 0;
+	float height;
+
+	for (int y = 0; y < Z_map.rows; y++){
+		for (int x = 0; x < Z_map.cols; x++){
+
+			height = Z_map.at<float>(y, x);
+			if ((int)noise_map.at<uchar>(y, x) == 255){
+				sum += 1;
+
+				/*point_cloud_after_rmnoise << x << " " << y << " " << Z_map.at<float>(y, x) << endl;*/
+				only_noise << x << " " << y << " " << height << endl;
+				if (height>100)
+					sum_of_right += 1;
+			}
+			else{
+				point_cloud_after_rmnoise << x << " " << y << " " << Z_map.at<float>(y, x) << endl;
+			}
+			/*point_cloud_zmap << x << " " << y << " " << height << endl;*/
+
+			// Split the image into different channels
+
+			//point_cloud << x << " " << y << " " << Z_map.at<float>(y, x) << rgbChannels[0](y, x) << endl;
+		}
+	}
+
+	only_noise.close();
+	point_cloud_after_rmnoise.close();
+	/*point_cloud_zmap.close();*/
+	cout << "sum of noise pixel: " << sum << endl;
+	cout << "sum of right noise pixel: " << sum_of_right << endl;
 }
