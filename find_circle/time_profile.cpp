@@ -140,13 +140,15 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	myfile.close();
+
+	String file_dir = "20220729_open_process";
 	for (int index = 0; index < 5; index++)
-		imwrite("20220722_open_process/20220721_binary_" + to_string(index) + ".jpg", binary_map[index]);
+		imwrite(file_dir+"/20220721_binary_" + to_string(index) + ".jpg", binary_map[index]);
 	
 	
 	//imwrite("20220721_not_fit_pattern_noise_first_and_last_4.jpg", noise_map);
 	
-	String file_dir = "20220722_open_process";
+	
 	
 	Mat binary_map_process[5];
 	Mat binary_map_diff[5];

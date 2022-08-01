@@ -13,12 +13,19 @@ vector<float> loadtxt(string loadPath);
 Mat read_zmap(string loadPath);
 int _tmain(int argc, _TCHAR* argv[])
 {
-	Mat img = imread("20220718_only_0to1_noise/20220718_b2w_noise.jpg", 2);
-
+	
+	/*Mat img = imread("20220718_only_0to1_noise/20220718_b2w_noise.jpg", 2);*/
+	//Mat img = imread("20220721_not_fit_pattern/20220721_not_fit_pattern_noise_first4.jpg", 2);
+	//Mat img = imread("20220722_open_dilate_k3/dilate_kernel_3.jpg", 2);
+	//Mat img = imread("20220729_sumof_three_noise/20220729_sum_of_only0to1_openk11_notfit.jpg");
+	Mat img = imread("20220729_open_process/20220722_erode_dilate_k11_diff_all.jpg");
 
 	Mat Z_map = read_zmap("source/cloud/Z_map.xml");
 	ofstream point_cloud_after_rmnoise;
-	point_cloud_after_rmnoise.open("point_cloud_after_rmnoise.xyz");
+	point_cloud_after_rmnoise.open("20220729_sumof_three_noise/test_after_rmnoise.xyz");
+	ofstream only_noise;
+	only_noise.open("20220729_sumof_three_noise/test_only_noise.txt");
+
 	/*float height;
 	int gray;
 	for (int y = 0; y < Z_map.rows; y++){
@@ -32,11 +39,11 @@ int _tmain(int argc, _TCHAR* argv[])
 	int sum_of_right = 0;
 	float height;
 
-	ofstream myfile;
-	ofstream point_cloud_zmap;
-	point_cloud_zmap.open("point_cloud_zmap.xyz");
+	
+	/*ofstream point_cloud_zmap;*/
+	/*point_cloud_zmap.open("point_cloud_zmap.xyz");*/
 
-	myfile.open("20220719_record_0to1_noise.txt");
+	
 	for (int y = 0; y < Z_map.rows; y++){
 		for (int x = 0; x < Z_map.cols; x++){
 
@@ -45,7 +52,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				sum += 1;
 
 				/*point_cloud_after_rmnoise << x << " " << y << " " << Z_map.at<float>(y, x) << endl;*/
-				myfile << x << " " << y << " " << height << endl;
+				only_noise << x << " " << y << " " << height << endl;
 				if (height>100)
 					sum_of_right+=1;
 			}
@@ -62,9 +69,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//Conver2cloud(img);
 
-	myfile.close();
+	only_noise.close();
 	point_cloud_after_rmnoise.close();
-	point_cloud_zmap.close();
+	/*point_cloud_zmap.close();*/
 	cout << "sum of noise pixel: "<<sum << endl;
 	cout << "sum of right noise pixel: " << sum_of_right << endl;
 

@@ -5,6 +5,7 @@
 *.txt
 *.cd
 *.log
+*.xyz
 x64/*
 find_circle/Debug/*
 find_circle/x64/Debug/*
